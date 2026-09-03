@@ -15,9 +15,11 @@ import {
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import LoadingScreen from "@/components/LoadingScreen";
 import { ThemeProvider, useTheme } from "@/components/ThemeContext";
 import "react-native-reanimated";
 
@@ -33,7 +35,7 @@ function RootNavigator() {
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
-          contentStyle: { backgroundColor: colors.bg },
+          contentStyle: { backgroundColor: colors.bg, flex: 1 },
         }}
       >
         <Stack.Screen name="index" />
@@ -55,6 +57,7 @@ export default function RootLayout() {
     InstrumentSerif_400Regular,
     InstrumentSerif_400Regular_Italic,
   });
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync();
@@ -65,7 +68,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <RootNavigator />
+        <View style={{ flex: 1 }}>
+          <RootNavigator />
+          {!splashDone ? <LoadingScreen onComplete={() => setSplashDone(true)} /> : null}
+        </View>
       </ThemeProvider>
     </SafeAreaProvider>
   );

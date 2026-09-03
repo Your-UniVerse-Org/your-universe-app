@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet, Text } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   Easing,
@@ -16,6 +16,8 @@ type Props = {
   onComplete: () => void;
   durationMs?: number;
 };
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 /** Website-aligned splash — purple mark, wordmark, gradient progress bar */
 export default function LoadingScreen({ onComplete, durationMs = 2800 }: Props) {
@@ -52,7 +54,11 @@ export default function LoadingScreen({ onComplete, durationMs = 2800 }: Props) 
   const barFillStyle = useAnimatedStyle(() => ({ width: `${barWidth.value}%` }));
 
   return (
-    <Animated.View style={[styles.screen, containerStyle]} accessibilityRole="progressbar">
+    <Animated.View
+      style={[styles.screen, containerStyle]}
+      accessibilityRole="progressbar"
+      pointerEvents="auto"
+    >
       <Animated.View style={markStyle}>
         <BrandMark height={140} color={brand.purple} />
       </Animated.View>
@@ -75,8 +81,13 @@ export default function LoadingScreen({ onComplete, durationMs = 2800 }: Props) 
 
 const styles = StyleSheet.create({
   screen: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
     zIndex: 9999,
+    elevation: 9999,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",

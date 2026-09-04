@@ -46,3 +46,19 @@ export type Learner = {
   created_at: string;
   updated_at: string;
 };
+
+/** Mirrors `schemas/auth.py::LearnerLogin` (your-universe-backend). */
+export type LearnerLoginInput = {
+  email: string;
+  password: string;
+};
+
+/** Mirrors `schemas/auth.py::TokenPairRead` — the response shape of both
+ * `POST /learners/login` and `POST /auth/refresh`. */
+export type TokenPair = {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  /** Seconds until access_token expires. */
+  expires_in: number;
+};

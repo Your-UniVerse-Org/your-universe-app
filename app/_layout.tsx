@@ -20,6 +20,7 @@ import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import LoadingScreen from "@/components/LoadingScreen";
+import { SessionProvider } from "@/components/SessionContext";
 import { ThemeProvider, useTheme } from "@/components/ThemeContext";
 import "react-native-reanimated";
 
@@ -68,10 +69,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <View style={{ flex: 1 }}>
-          <RootNavigator />
-          {!splashDone ? <LoadingScreen onComplete={() => setSplashDone(true)} /> : null}
-        </View>
+        <SessionProvider>
+          <View style={{ flex: 1 }}>
+            <RootNavigator />
+            {!splashDone ? <LoadingScreen onComplete={() => setSplashDone(true)} /> : null}
+          </View>
+        </SessionProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

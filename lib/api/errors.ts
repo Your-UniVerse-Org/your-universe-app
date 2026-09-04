@@ -2,10 +2,14 @@ import type { LearnerField } from "@/lib/api/types";
 
 export type LearnerFieldErrors = Partial<Record<LearnerField, string>>;
 
+/** Shared across every API error union in this file — a `fetch` that threw (offline, DNS
+ * failure, etc.) rather than returning a response. */
+export type NetworkError = { kind: "network"; message: string };
+
 export type RegisterLearnerError =
   | { kind: "validation"; fieldErrors: LearnerFieldErrors; formError?: string }
   | { kind: "conflict"; message: string }
-  | { kind: "network"; message: string }
+  | NetworkError
   | { kind: "server"; message: string };
 
 const KNOWN_FIELDS: readonly LearnerField[] = [
@@ -34,8 +38,15 @@ function stripValueErrorPrefix(msg: string): string {
   return msg.replace(/^Value error,\s*/i, "");
 }
 
-function parseValidationBody(body: unknown): RegisterLearnerError {
-  const fieldErrors: LearnerFieldErrors = {};
+/** Walks a FastAPI/Pydantic 422 `detail` array into per-field messages (keyed by whatever
+ * `isField` accepts) plus a joined form-level message for anything else — a cross-field rule
+ * (loc has no field segment) or a plain string `detail`. Shared by every endpoint that returns
+ * this same 422 shape (registration, login). */
+function parseLocFieldValidation<F extends string>(
+  body: unknown,
+  isField: (value: unknown) => value is F,
+): { fieldErrors: Partial<Record<F, string>>; formError?: string } {
+  const fieldErrors: Partial<Record<F, string>> = {};
   const formErrors: string[] = [];
 
   const issues = body && typeof body === "object" && "detail" in body ? (body as { detail: unknown }).detail : null;
@@ -47,7 +58,7 @@ function parseValidationBody(body: unknown): RegisterLearnerError {
       // cross-field (model-level) error such as "email and guardian_email must be different".
       const loc = Array.isArray(raw.loc) ? raw.loc : [];
       const field = loc.length >= 2 ? loc[1] : undefined;
-      if (isLearnerField(field)) {
+      if (isField(field)) {
         if (!fieldErrors[field]) fieldErrors[field] = msg;
       } else {
         formErrors.push(msg);
@@ -57,11 +68,11 @@ function parseValidationBody(body: unknown): RegisterLearnerError {
     formErrors.push(issues);
   }
 
-  return {
-    kind: "validation",
-    fieldErrors,
-    formError: formErrors.length ? formErrors.join(" ") : undefined,
-  };
+  return { fieldErrors, formError: formErrors.length ? formErrors.join(" ") : undefined };
+}
+
+function parseValidationBody(body: unknown): RegisterLearnerError {
+  return { kind: "validation", ...parseLocFieldValidation(body, isLearnerField) };
 }
 
 function extractDetailMessage(body: unknown, fallback: string): string {
@@ -87,6 +98,59 @@ export function parseRegisterLearnerError(status: number, body: unknown): Regist
 
 export function networkError(
   message = "Couldn't reach the server. Check your connection and try again.",
-): Extract<RegisterLearnerError, { kind: "network" }> {
+): NetworkError {
   return { kind: "network", message };
+}
+
+// --- POST /learners/login ---
+
+export type LoginField = "email" | "password";
+export type LoginFieldErrors = Partial<Record<LoginField, string>>;
+
+export type LoginError =
+  | { kind: "invalid_credentials"; message: string }
+  | { kind: "validation"; fieldErrors: LoginFieldErrors; formError?: string }
+  | NetworkError
+  | { kind: "server"; message: string };
+
+function isLoginField(value: unknown): value is LoginField {
+  return value === "email" || value === "password";
+}
+
+/** Maps an HTTP response's status + parsed JSON body to a typed login error. A 401 here means
+ * "email or password is wrong" — the backend deliberately returns the same message for an
+ * unknown email as for a wrong password (see `services/learner_service.py::authenticate` in
+ * your-universe-backend), so this can't be used to tell the two apart either. */
+export function parseLoginError(status: number, body: unknown): LoginError {
+  if (status === 422) return { kind: "validation", ...parseLocFieldValidation(body, isLoginField) };
+  if (status === 401) {
+    return { kind: "invalid_credentials", message: extractDetailMessage(body, "Invalid email or password.") };
+  }
+  return {
+    kind: "server",
+    message: extractDetailMessage(body, "Something went wrong on our end. Please try again."),
+  };
+}
+
+// --- POST /auth/refresh ---
+
+export type RefreshError =
+  | { kind: "invalid_token"; message: string }
+  | NetworkError
+  | { kind: "server"; message: string };
+
+/** Maps an HTTP response's status + parsed JSON body to a typed refresh error. A 401 covers
+ * every rejection reason the backend can return here — expired, malformed, an access token
+ * presented in place of a refresh token, or a learner who no longer exists (see
+ * `services/auth_service.py::LearnerAuthService.refresh` in your-universe-backend) — the
+ * client can't and shouldn't try to distinguish them; the only valid response is "log in
+ * again". */
+export function parseRefreshError(status: number, body: unknown): RefreshError {
+  if (status === 401) {
+    return { kind: "invalid_token", message: extractDetailMessage(body, "Your session has expired. Please log in again.") };
+  }
+  return {
+    kind: "server",
+    message: extractDetailMessage(body, "Something went wrong on our end. Please try again."),
+  };
 }

@@ -1,5 +1,5 @@
-import { Link, useRouter } from "expo-router";
-import { useCallback } from "react";
+import { Link } from "expo-router";
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BrandLogo from "@/components/BrandLogo";
@@ -14,22 +14,21 @@ import {
   ScreenTitle,
 } from "@/components/ui";
 import { OAUTH_LOGIN_ENABLED } from "@/lib/auth/featureFlags";
-import { useLearnerLogin } from "@/lib/hooks/useLearnerLogin";
 import { FIGMA_ASSETS } from "@/lib/figma-assets";
 import { fonts } from "@/lib/theme";
 
-/** Learner sign-in — hits POST /learners/login (see lib/hooks/useLearnerLogin.ts). Guardian
- * sign-in is a separate screen at /guardian-login (not yet wired to a backend — guardians
- * authenticate via Supabase Auth, added in a later phase). */
-export default function LoginScreen() {
+const NOT_AVAILABLE_MESSAGE =
+  "Guardian sign-in isn't available yet — guardians will authenticate via Supabase Auth in a later phase. Check back soon.";
+
+/** Guardian sign-in — UI only for now. your-universe-backend authenticates guardians through
+ * Supabase Auth directly from the client (see docs/learner-auth.md there, section 3), which
+ * this app doesn't integrate yet; submitting shows a "coming soon" message instead of a real
+ * request. Learner sign-in (the wired one) is at /login. */
+export default function GuardianLoginScreen() {
   const { colors } = useTheme();
-  const router = useRouter();
-
-  const handleSuccess = useCallback(() => {
-    router.replace("/home");
-  }, [router]);
-
-  const { values, setField, fieldErrors, formError, submitting, handleSubmit } = useLearnerLogin(handleSuccess);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState<string | undefined>(undefined);
 
   return (
     <GalacticBackground>
@@ -37,29 +36,27 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <BrandLogo height={32} color={colors.text1} />
           <View style={styles.header}>
-            <ScreenTitle title="Sign in to your Account" subtitle="Enter your email and password to log in" />
+            <ScreenTitle title="Guardian Sign In" subtitle="Enter your email and password to log in" />
           </View>
           <View style={styles.form}>
             <FormError message={formError} />
             <AuthField
               label="Email"
-              value={values.email}
-              onChangeText={(v) => setField("email", v)}
-              error={fieldErrors.email}
+              value={email}
+              onChangeText={setEmail}
               keyboardType="email-address"
-              testID="login-email"
+              testID="guardian-login-email"
             />
             <AuthField
               label="Password"
               secure
               trailingIcon={FIGMA_ASSETS.auth.eyeOff}
-              value={values.password}
-              onChangeText={(v) => setField("password", v)}
-              error={fieldErrors.password}
-              testID="login-password"
+              value={password}
+              onChangeText={setPassword}
+              testID="guardian-login-password"
             />
             <Text style={[styles.forgot, { color: colors.text2 }]}>Forgot Password ?</Text>
-            <PrimaryButton label="Log In" onPress={handleSubmit} loading={submitting} variant="primary" />
+            <PrimaryButton label="Log In" onPress={() => setFormError(NOT_AVAILABLE_MESSAGE)} variant="primary" />
             {OAUTH_LOGIN_ENABLED ? (
               <View style={styles.socialBlock}>
                 <OrDivider />
@@ -68,15 +65,9 @@ export default function LoginScreen() {
             ) : null}
           </View>
           <Text style={[styles.footer, { color: colors.text2 }]}>
-            Don&apos;t have an account?{" "}
-            <Link href="/role" style={{ color: colors.purple, fontFamily: fonts.sansSemiBold }}>
-              Sign Up
-            </Link>
-          </Text>
-          <Text style={[styles.footer, styles.altRole, { color: colors.text2 }]}>
-            Signing in as a guardian?{" "}
-            <Link href="/guardian-login" style={{ color: colors.purple, fontFamily: fonts.sansSemiBold }}>
-              Guardian sign in
+            Signing in as a learner?{" "}
+            <Link href="/login" style={{ color: colors.purple, fontFamily: fonts.sansSemiBold }}>
+              Learner sign in
             </Link>
           </Text>
         </ScrollView>
@@ -103,5 +94,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fonts.sansMedium,
   },
-  altRole: { marginTop: 12 },
 });

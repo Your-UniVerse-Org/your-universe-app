@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GalacticBackground from "@/components/GalacticBackground";
 import GameCard from "@/components/GameCard";
+import { useSession } from "@/components/SessionContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeContext";
 import YourUniverseScore from "@/components/YourUniverseScore";
@@ -26,6 +27,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export default function ProfileScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { logout } = useSession();
 
   return (
     <GalacticBackground>
@@ -64,7 +66,13 @@ export default function ProfileScreen() {
             <DetailRow label="Current Grade" value="Grade 11" />
           </GameCard>
 
-          <Pressable style={[styles.signOut, { backgroundColor: colors.purple }]} onPress={() => router.replace("/welcome")}>
+          <Pressable
+            style={[styles.signOut, { backgroundColor: colors.purple }]}
+            onPress={async () => {
+              await logout();
+              router.replace("/welcome");
+            }}
+          >
             <Image source={{ uri: FIGMA_ASSETS.profile.signOut }} style={[styles.signOutIcon, { tintColor: colors.white }]} contentFit="contain" />
             <Text style={[styles.signOutText, { color: colors.white }]}>Sign-out</Text>
           </Pressable>

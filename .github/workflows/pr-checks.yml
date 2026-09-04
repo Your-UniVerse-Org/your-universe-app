@@ -27,5 +27,5 @@ jobs:
       - name: Validate Expo project (expo-doctor)
         run: npx expo-doctor
 
-      - name: Verify Expo project exports (web)
-        run: npx expo export --platform web
+      - name: Run tests
+        run: npm test -- --ci

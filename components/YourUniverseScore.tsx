@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   glow: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     opacity: 0.9,
   },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

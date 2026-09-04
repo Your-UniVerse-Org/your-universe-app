@@ -15,6 +15,8 @@ export type ThemeColors = {
   orangeDim: string;
   orangeBorder: string;
   orangeText: string;
+  danger: string;
+  dangerDim: string;
   text1: string;
   text2: string;
   text3: string;
@@ -64,6 +66,8 @@ export const darkTheme: ThemeColors = {
   orangeDim: "rgba(254,74,35,0.10)",
   orangeBorder: "rgba(254,74,35,0.25)",
   orangeText: brand.orangeText,
+  danger: "#F87171",
+  dangerDim: "rgba(248,113,113,0.12)",
   text1: "#F1F5F9",
   text2: "#94A3B8",
   text3: "#475569",
@@ -104,6 +108,8 @@ export const lightTheme: ThemeColors = {
   orangeDim: "rgba(254,74,35,0.08)",
   orangeBorder: "rgba(254,74,35,0.20)",
   orangeText: brand.orangeText,
+  danger: "#DC2626",
+  dangerDim: "rgba(220,38,38,0.08)",
   text1: "#0F172A",
   text2: "#475569",
   text3: "#94A3B8",

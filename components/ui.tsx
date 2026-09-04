@@ -1,6 +1,15 @@
 import { Image } from "expo-image";
 import { useRouter, type Href } from "expo-router";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type KeyboardTypeOptions,
+  type TextInputProps,
+} from "react-native";
 import { useTheme } from "@/components/ThemeContext";
 import { FIGMA_ASSETS } from "@/lib/figma-assets";
 import { fonts, radii } from "@/lib/theme";
@@ -10,16 +19,21 @@ export function PrimaryButton({
   href,
   onPress,
   variant = "primary",
+  disabled = false,
+  loading = false,
 }: {
   label: string;
   href?: Href;
   onPress?: () => void;
   variant?: "primary" | "orange" | "ghost" | "outline";
+  disabled?: boolean;
+  loading?: boolean;
 }) {
   const router = useRouter();
   const { colors, shadow } = useTheme();
 
   const handlePress = () => {
+    if (disabled || loading) return;
     if (href) router.push(href);
     else onPress?.();
   };
@@ -36,41 +50,125 @@ export function PrimaryButton({
   const textStyle = { color: variant === "ghost" || variant === "outline" ? colors.text1 : colors.white };
 
   return (
-    <Pressable onPress={handlePress} style={[styles.btn, variantStyle]}>
-      <Text style={[styles.btnText, textStyle]}>{label}</Text>
+    <Pressable
+      onPress={handlePress}
+      disabled={disabled || loading}
+      style={[styles.btn, variantStyle, (disabled || loading) && styles.btnDisabled]}
+    >
+      {loading ? (
+        <ActivityIndicator color={textStyle.color} />
+      ) : (
+        <Text style={[styles.btnText, textStyle]}>{label}</Text>
+      )}
     </Pressable>
   );
 }
 
 export function AuthField({
   label,
+  value,
+  onChangeText,
+  error,
   secure,
   leadingIcon,
   trailingIcon,
+  keyboardType,
+  autoCapitalize,
+  placeholder,
+  testID,
 }: {
   label: string;
+  value?: string;
+  onChangeText?: (value: string) => void;
+  error?: string;
   secure?: boolean;
   leadingIcon?: string;
   trailingIcon?: string;
+  keyboardType?: KeyboardTypeOptions;
+  autoCapitalize?: TextInputProps["autoCapitalize"];
+  placeholder?: string;
+  testID?: string;
 }) {
   const { colors } = useTheme();
+  const borderColor = error ? colors.danger : colors.border;
   return (
     <View style={styles.fieldWrap}>
       <Text style={[styles.fieldLabel, { color: colors.text2 }]}>{label}</Text>
-      <View style={[styles.inputRow, { borderColor: colors.border, backgroundColor: colors.surface2 }]}>
+      <View style={[styles.inputRow, { borderColor, backgroundColor: colors.surface2 }]}>
         {leadingIcon ? (
           <Image source={{ uri: leadingIcon }} style={styles.fieldIcon} contentFit="contain" />
         ) : null}
         <TextInput
+          value={value}
+          onChangeText={onChangeText}
           secureTextEntry={secure}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize ?? "none"}
+          placeholder={placeholder}
           placeholderTextColor={colors.text3}
           style={[styles.input, { color: colors.text1 }]}
           selectionColor={colors.purple}
+          testID={testID}
         />
         {trailingIcon ? (
           <Image source={{ uri: trailingIcon }} style={styles.fieldIcon} contentFit="contain" />
         ) : null}
       </View>
+      {error ? <Text style={[styles.fieldError, { color: colors.danger }]}>{error}</Text> : null}
+    </View>
+  );
+}
+
+export function SegmentedField<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  error,
+}: {
+  label: string;
+  value: T | null;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+  error?: string;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.fieldWrap}>
+      <Text style={[styles.fieldLabel, { color: colors.text2 }]}>{label}</Text>
+      <View style={styles.segmentRow}>
+        {options.map((option) => {
+          const selected = option.value === value;
+          return (
+            <Pressable
+              key={option.value}
+              onPress={() => onChange(option.value)}
+              style={[
+                styles.segmentPill,
+                {
+                  backgroundColor: selected ? colors.purpleDim : colors.surface2,
+                  borderColor: selected ? colors.purple : error ? colors.danger : colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.segmentText, { color: selected ? colors.purple : colors.text2 }]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {error ? <Text style={[styles.fieldError, { color: colors.danger }]}>{error}</Text> : null}
+    </View>
+  );
+}
+
+export function FormError({ message }: { message?: string }) {
+  const { colors } = useTheme();
+  if (!message) return null;
+  return (
+    <View style={[styles.formError, { backgroundColor: colors.dangerDim, borderColor: colors.danger }]}>
+      <Text style={[styles.formErrorText, { color: colors.danger }]}>{message}</Text>
     </View>
   );
 }
@@ -147,8 +245,24 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   btnText: { fontSize: 14, fontFamily: fonts.sansMedium, letterSpacing: -0.14 },
+  btnDisabled: { opacity: 0.6 },
   backBtn: { alignSelf: "flex-start" },
   fieldWrap: { gap: 4 },
+  fieldError: { fontSize: 12, fontFamily: fonts.sansMedium, marginTop: 2 },
+  segmentRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  segmentPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+  },
+  segmentText: { fontSize: 13, fontFamily: fonts.sansMedium },
+  formError: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    padding: 12,
+  },
+  formErrorText: { fontSize: 13, fontFamily: fonts.sansMedium, lineHeight: 18 },
   fieldLabel: {
     fontSize: 12,
     fontFamily: fonts.sansMedium,

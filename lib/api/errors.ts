@@ -154,3 +154,55 @@ export function parseRefreshError(status: number, body: unknown): RefreshError {
     message: extractDetailMessage(body, "Something went wrong on our end. Please try again."),
   };
 }
+
+// --- PUT /learners/me/onboarding ---
+
+export type SaveOnboardingError =
+  | { kind: "unauthorized"; message: string }
+  | { kind: "validation"; message: string }
+  /** The backend rejects any write once the profile is already marked complete (see
+   * OnboardingService.upsert in your-universe-backend) — onboarding only ever runs once per
+   * learner. Not really a "failure" from the learner's point of view: the answers are already
+   * saved, there's just nothing new to write (see useOnboardingFlow.ts). */
+  | { kind: "already_completed"; message: string }
+  | NetworkError
+  | { kind: "server"; message: string };
+
+/** Maps an HTTP response's status + parsed JSON body to a typed error for saving the
+ * onboarding profile. Unlike login/registration, there's no per-field UI here (the onboarding
+ * screens are chip/card pickers, not free-text fields), so a single message is enough. */
+export function parseSaveOnboardingError(status: number, body: unknown): SaveOnboardingError {
+  if (status === 401) {
+    return { kind: "unauthorized", message: extractDetailMessage(body, "Your session has expired. Please log in again.") };
+  }
+  if (status === 409) {
+    return { kind: "already_completed", message: extractDetailMessage(body, "Onboarding is already complete.") };
+  }
+  if (status === 422) {
+    return { kind: "validation", message: extractDetailMessage(body, "Some of your answers couldn't be saved.") };
+  }
+  return {
+    kind: "server",
+    message: extractDetailMessage(body, "Something went wrong on our end. Please try again."),
+  };
+}
+
+// --- GET /learners/me/onboarding ---
+
+export type GetOnboardingError =
+  | { kind: "unauthorized"; message: string }
+  | NetworkError
+  | { kind: "server"; message: string };
+
+/** A 404 here means "no onboarding profile saved yet" — an expected, non-error outcome for a
+ * learner who hasn't been through onboarding — so it's handled by the caller
+ * (lib/api/onboarding.ts::getOnboardingProfile), not this parser. */
+export function parseGetOnboardingError(status: number, body: unknown): GetOnboardingError {
+  if (status === 401) {
+    return { kind: "unauthorized", message: extractDetailMessage(body, "Your session has expired. Please log in again.") };
+  }
+  return {
+    kind: "server",
+    message: extractDetailMessage(body, "Something went wrong on our end. Please try again."),
+  };
+}

@@ -77,7 +77,7 @@ describe("useLearnerRegistration", () => {
 
     expect(submitted).toBe(true);
     expect(mockRegisterLearner).toHaveBeenCalledWith(VALID_VALUES);
-    expect(onSuccess).toHaveBeenCalledWith(LEARNER);
+    expect(onSuccess).toHaveBeenCalledWith(LEARNER, VALID_VALUES);
     expect(result.current.fieldErrors).toEqual({});
     expect(result.current.formError).toBeUndefined();
   });

@@ -19,7 +19,9 @@ const INITIAL_VALUES: LearnerRegistrationInput = {
  * API, and mapping whatever comes back (client validation, server validation, duplicate
  * email, network/server failure) into field-level and form-level errors the screen renders.
  * Kept separate from the screen component so it's testable without rendering any UI. */
-export function useLearnerRegistration(onSuccess?: (learner: Learner) => void) {
+export function useLearnerRegistration(
+  onSuccess?: (learner: Learner, input: LearnerRegistrationInput) => void,
+) {
   const [values, setValues] = useState<LearnerRegistrationInput>(INITIAL_VALUES);
   const [fieldErrors, setFieldErrors] = useState<LearnerFieldErrors>({});
   const [formError, setFormError] = useState<string | undefined>(undefined);
@@ -53,7 +55,7 @@ export function useLearnerRegistration(onSuccess?: (learner: Learner) => void) {
       const result = await registerLearner(values);
       if (result.ok) {
         setFieldErrors({});
-        onSuccess?.(result.learner);
+        onSuccess?.(result.learner, values);
         return true;
       }
 

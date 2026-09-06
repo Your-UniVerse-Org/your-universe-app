@@ -8,7 +8,12 @@ Pure, UI-free modules in `lib/` (besides `api/`): onboarding data, scoring, bran
 
 Option lists: `GRADE_OPTIONS` (9–12), `STRENGTH_OPTIONS[9]` (Problem Solving…), `PRIORITY_OPTIONS[8]` (Fees, Location…), `CAREER_OPTIONS` (tech/health/business/arts + desc), `PATHWAY_OPTIONS` (university/tvet/private + desc). `INTRO_CAROUSEL[3]` (title + `FIGMA_ASSETS.onboarding.carouselN`) feeds `app/(auth)/intro.tsx`.
 
-Flow state (`stepIndex`, `selections`) is local to `OnboardingFlow`, not persisted — `next/skip` → `router.replace("/home")`. `strengths` min/max not enforced in UI yet.
+Flow state (`stepIndex`, `selections`) lives in `lib/hooks/useOnboardingFlow.ts`, persisted to
+`AsyncStorage` on every change and submitted to `your-universe-backend`
+(`PUT /learners/me/onboarding`) once the flow reaches its summary step — see
+[`onboarding`](onboarding.md) for the full read/write path, including why registration auto-logs
+the learner in first. `strengths` min/max still isn't enforced in the UI (the backend doesn't
+enforce it either — see that doc).
 
 ## Universe Score (`lib/universe-score.ts`, UI `components/YourUniverseScore.tsx`)
 

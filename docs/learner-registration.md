@@ -49,7 +49,12 @@ if the two drift out of sync, or the backend adds a rule the client doesn't know
 than assuming client-side validation passing means the request will succeed.
 
 Submitting a valid form disables the "Register" button and shows a spinner (`PrimaryButton`'s
-`loading` prop) until the request resolves, then navigates to `/intro` on success.
+`loading` prop) until the request resolves. On success, `app/(auth)/signup.tsx`'s `onSuccess`
+callback also signs the learner in (`useSession().login(learner.email, input.password)`) before
+navigating to `/intro` — registration itself issues no tokens, but the onboarding carousel that
+follows needs a session to save its answers. See `docs/onboarding.md` for that flow, and
+`your-universe-backend`'s `docs/learner-auth.md` for why registration and login are separate
+calls.
 
 ## Gender field
 

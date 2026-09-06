@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GalacticBackground from "@/components/GalacticBackground";
+import { useSession } from "@/components/SessionContext";
 import { useTheme } from "@/components/ThemeContext";
 import { AuthField, BackButton, FormError, PrimaryButton, ScreenTitle, SegmentedField } from "@/components/ui";
 import { GENDER_OPTIONS } from "@/lib/api/types";
@@ -13,10 +14,20 @@ import { fonts } from "@/lib/theme";
 export default function SignUpScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { login } = useSession();
 
-  const handleSuccess = useCallback(() => {
-    router.push("/intro");
-  }, [router]);
+  const handleSuccess = useCallback(
+    async (learner: { email: string }, input: { password: string }) => {
+      // Registration itself issues no tokens (see docs/learner-auth.md in
+      // your-universe-backend), but the onboarding flow right after this needs a session to
+      // save its answers (docs/onboarding.md) — so sign the learner in with the credentials
+      // they just submitted. Best-effort: if it fails, onboarding still works locally and
+      // just skips its final save (see lib/hooks/useOnboardingFlow.ts).
+      await login(learner.email, input.password);
+      router.push("/intro");
+    },
+    [login, router],
+  );
 
   const { values, setField, fieldErrors, formError, submitting, handleSubmit } =
     useLearnerRegistration(handleSuccess);

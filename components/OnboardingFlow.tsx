@@ -1,21 +1,13 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/components/ThemeContext";
-import { BackButton, PrimaryButton, ProgressBar } from "@/components/ui";
+import { BackButton, FormError, PrimaryButton, ProgressBar } from "@/components/ui";
 import GalacticBackground from "@/components/GalacticBackground";
 import { Pill } from "@/components/GameCard";
 import { FIGMA_ASSETS } from "@/lib/figma-assets";
-import {
-  CAREER_OPTIONS,
-  GRADE_OPTIONS,
-  ONBOARDING_STEPS,
-  PATHWAY_OPTIONS,
-  PRIORITY_OPTIONS,
-  STRENGTH_OPTIONS,
-} from "@/lib/onboarding-steps";
+import { useOnboardingFlow } from "@/lib/hooks/useOnboardingFlow";
+import { CAREER_OPTIONS, GRADE_OPTIONS, PATHWAY_OPTIONS, PRIORITY_OPTIONS, STRENGTH_OPTIONS } from "@/lib/onboarding-steps";
 import { fonts } from "@/lib/theme";
 
 const STEP_COPY: Record<string, { title: string; subtitle: string }> = {
@@ -42,37 +34,8 @@ const STEP_COPY: Record<string, { title: string; subtitle: string }> = {
 };
 
 export default function OnboardingFlow() {
-  const router = useRouter();
   const { colors } = useTheme();
-  const [stepIndex, setStepIndex] = useState(0);
-  const [selections, setSelections] = useState<Record<number, string[]>>({});
-
-  const step = ONBOARDING_STEPS[stepIndex];
-  const selected = selections[stepIndex] ?? [];
-
-  function toggle(id: string, multi?: boolean) {
-    setSelections((prev) => {
-      const cur = prev[stepIndex] ?? [];
-      if (multi) {
-        const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
-        return { ...prev, [stepIndex]: next };
-      }
-      return { ...prev, [stepIndex]: [id] };
-    });
-  }
-
-  function next() {
-    if (stepIndex < ONBOARDING_STEPS.length - 1) setStepIndex((s) => s + 1);
-    else router.replace("/home");
-  }
-
-  function skip() {
-    router.replace("/home");
-  }
-
-  function back() {
-    if (stepIndex > 0) setStepIndex((s) => s - 1);
-  }
+  const { step, selected, toggle, next, skip, back, submitError } = useOnboardingFlow();
 
   const cardStyle = (active: boolean) => [
     active && { borderColor: colors.purple, backgroundColor: colors.purpleDim },
@@ -123,6 +86,7 @@ export default function OnboardingFlow() {
               <Text style={[styles.summaryLabel, { color: colors.text2 }]}>Focus</Text>
               <Text style={[styles.summaryValue, { color: colors.text1 }]}>Science & Technology</Text>
             </View>
+            <FormError message={submitError} />
             <View style={styles.actions}>
               <PrimaryButton label="Go to Home" onPress={next} variant="primary" />
             </View>

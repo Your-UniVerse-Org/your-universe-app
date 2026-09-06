@@ -12,6 +12,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeContext";
 import XpBar from "@/components/XpBar";
 import { FIGMA_ASSETS } from "@/lib/figma-assets";
+import { useOnboardingStatus } from "@/lib/hooks/useOnboardingStatus";
 import { fonts } from "@/lib/theme";
 
 const EXPLORE_CARDS = [
@@ -44,6 +45,7 @@ const EXPLORE_CARDS = [
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const onboardingStatus = useOnboardingStatus();
 
   return (
     <GalacticBackground>
@@ -72,12 +74,14 @@ export default function HomeScreen() {
 
             <XpBar level={3} xp={240} maxXp={500} title="Explorer" />
 
-            <NextBestAction
-              title="Complete your academic profile"
-              subtitle="Better recommendations unlock as your profile grows."
-              cta="Continue"
-              onPress={() => router.push("/onboarding")}
-            />
+            {onboardingStatus !== "complete" && (
+              <NextBestAction
+                title="Complete your academic profile"
+                subtitle="Better recommendations unlock as your profile grows."
+                cta="Continue"
+                onPress={() => router.push("/onboarding")}
+              />
+            )}
 
             <MyJourneyStrip />
 

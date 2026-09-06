@@ -62,3 +62,33 @@ export type TokenPair = {
   /** Seconds until access_token expires. */
   expires_in: number;
 };
+
+/** Mirrors `models/onboarding.py` (your-universe-backend) — kept in sync by hand, same as the
+ * other types in this file. */
+export type Grade = "9" | "10" | "11" | "12";
+export type CareerInterest = "tech" | "health" | "business" | "arts";
+export type Pathway = "university" | "tvet" | "private";
+
+/** Mirrors `schemas/onboarding.py::OnboardingProfileUpdate` — every field optional, since a
+ * caller may only have answered part of the onboarding flow so far. */
+export type OnboardingProfileInput = {
+  grade?: Grade;
+  strengths?: string[];
+  priorities?: string[];
+  career_interest?: CareerInterest;
+  pathway?: Pathway;
+};
+
+/** Mirrors `schemas/onboarding.py::OnboardingProfileRead` — the response shape of both
+ * `PUT /learners/me/onboarding` and `GET /learners/me/onboarding`. */
+export type OnboardingProfile = {
+  learner_id: string;
+  grade: Grade | null;
+  strengths: string[];
+  priorities: string[];
+  career_interest: CareerInterest | null;
+  pathway: Pathway | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};

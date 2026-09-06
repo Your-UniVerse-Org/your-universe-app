@@ -123,12 +123,13 @@ a practical issue today since nothing else holds a copy of it.
   `lib/auth/tokenStorage.ts`'s `AsyncStorage` calls for `expo-secure-store`'s
   `getItemAsync`/`setItemAsync`/`deleteItemAsync` (a new native dependency; needs a
   prebuild/rebuild, not just a JS change).
-- **No authenticated-request helper yet.** `SessionContext` exposes `accessToken`, but no screen
-  currently calls a protected backend endpoint (`GET /learners/me` included) — every tab
-  (`home`/`explore`/`portfolio`/`profile`) is still static mock data (see
-  `docs/domain-logic.md`). When a screen needs one, add a small `fetchWithAuth` wrapper that
-  attaches `Authorization: Bearer <accessToken>` and retries once via `session` after a `401` —
-  don't scatter manual header-setting across screens.
+- **No shared authenticated-request helper yet.** `SessionContext` exposes `accessToken`, and one
+  screen now uses it directly — the onboarding carousel's final save
+  (`lib/api/onboarding.ts::saveOnboardingProfile`, see `docs/onboarding.md`) attaches
+  `Authorization: Bearer <accessToken>` itself. Every tab (`home`/`explore`/`portfolio`/`profile`)
+  is still static mock data (see `docs/domain-logic.md`). If a second protected endpoint gets a
+  caller, it's worth factoring a small `fetchWithAuth` wrapper that attaches the header and
+  retries once via `session` after a `401` — not worth it for a single caller yet.
 - **No mid-session revocation.** See "Sign out" above.
 
 ## OAuth (Google Sign-In)

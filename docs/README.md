@@ -14,7 +14,8 @@ Start here: [overview](overview.md) → [getting-started](getting-started.md) �
 - [api-client](api-client.md) — config, POST /learners, errors, hook
 - [learner-registration](learner-registration.md) — signup feature walkthrough
 - [session](session.md) — learner login, token persistence across restarts, route guarding
-- [domain-logic](domain-logic.md) — onboarding data, Universe Score, brand assets
+- [domain-logic](domain-logic.md) — onboarding option data, Universe Score, brand assets
+- [onboarding](onboarding.md) — onboarding flow: on-device progress, saving to the backend
 - [testing](testing.md) — jest setup, layout, gotchas
 - [conventions](conventions.md) — code rules + PR workflow
 - [troubleshooting](troubleshooting.md) — quick fixes
